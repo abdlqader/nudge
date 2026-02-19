@@ -48,7 +48,7 @@ Note: Daily statistics are computed on-demand via queries on the tasks table.
 ## 1. Recurring_Tasks Entity
 
 ### Purpose
-Defines recurring task templates with schedule patterns. Instances are automatically generated in the `tasks` table.
+Defines recurrence patterns for task schedules. This table contains ONLY recurrence configuration - NOT task properties. When active, the system generates task instances in the `tasks` table based on these patterns.
 
 ### Pydantic Model Specification
 
@@ -63,14 +63,7 @@ RecurrenceType (Enum):
 | Field Name | Type | Nullable | Default | Description | Validation Rules |
 |------------|------|----------|---------|-------------|------------------|
 | `id` | UUID | No | auto | Unique identifier | Primary Key |
-| `name` | String | No | - | Task description | 1-200 characters |
-| `task_type` | TaskType | No | - | Classification | Enum: UNIT_BASED, TIME_BASED, COMMUTE |
-| `task_category` | TaskCategory | No | ACTION | Category type | Enum: ANCHOR, TRANSIT, ACTION |
-| `priority` | Priority | No | MEDIUM | Importance level | Enum value (1-4) |
-| `expected_duration` | Integer | Yes | null | Expected minutes | 1-1440 (max 24 hours) |
-| `expected_units` | Integer | Yes | null | Expected quantity | 1-1000 |
-| `category` | String | Yes | null | User-defined tag | Max 50 chars |
-| `notes` | Text | Yes | null | Additional context | Max 1000 chars |
+| `name` | String | No | - | Template name/label | 1-200 characters |
 | `recurrence_type` | RecurrenceType | No | - | Recurrence pattern | Enum value |
 | `recurrence_interval` | Integer | Yes | 1 | Repeat every N periods | For DAILY (e.g., every 2 days) |
 | `recurrence_days` | JSON | Yes | null | Days of week | Array: [0-6] where 0=Sunday |
@@ -126,7 +119,7 @@ IF recurrence_type == MONTHLY_PATTERN:
 ## 2. Task Entity
 
 ### Purpose
-Represents a single actionable item with success tracking capabilities. Can be standalone or an instance of a recurring schedule.
+Represents a single actionable item with success tracking capabilities. Each task is a complete, independent entity with all task properties. Can be standalone or generated from a recurring schedule (linked via `recurring_task_id`).
 
 ### Pydantic Model Specification
 
@@ -158,12 +151,13 @@ Priority (Enum):
 | Field Name | Type | Nullable | Default | Description | Validation Rules |
 |------------|------|----------|---------|-------------|------------------|
 | `id` | UUID | No | auto | Unique identifier | Primary Key |
+| `recurring_task_id` | UUID | Yes | null | Link to recurring pattern | References recurring_tasks(id); NULL for standalone |
 | `name` | String | No | - | Task description | 1-200 characters |
-| `task_type` | TaskType | No | - | Classification | Enum value |
+| `task_type` | TaskType | No | - | Classification | Enum: UNIT_BASED, TIME_BASED, COMMUTE |
 | `task_category` | TaskCategory | No | ACTION | Category type | Enum: ANCHOR, TRANSIT, ACTION |
 | `is_commute` | Boolean | No | False | Commute flag | Auto-set if task_type=COMMUTE |
 | `status` | TaskStatus | No | PENDING | Current state | Enum value |
-| `priority` | Priority | No | MEDIUM | Importance level | Enum value |
+| `priority` | Priority | No | MEDIUM | Importance level | Enum value (1-4) |
 | `expected_duration` | Integer | Yes | null | Expected minutes | 1-1440 (max 24 hours) |
 | `actual_duration` | Integer | Yes | null | Actual minutes | 1-1440, set on completion |
 | `expected_units` | Integer | Yes | null | Expected quantity | 1-1000 |
@@ -174,8 +168,7 @@ Priority (Enum):
 | `created_at` | DateTime | No | now() | Creation timestamp | ISO 8601 |
 | `updated_at` | DateTime | No | now() | Last modified | ISO 8601, auto-update |
 | `completed_at` | DateTime | Yes | null | Completion timestamp | Set when status=COMPLETED |
-| `success_percentage` | Float | Yes | null | Computed success | 0.0-100.0, calculated field |
-| `recurring_task_id` | UUID | Yes | null | Link to recurring template | References recurring_tasks(id) |
+| `success_percentage` | Float | Yes | null | Computed success | 0.0-150.0, calculated field |
 
 ### Business Logic Constraints
 
@@ -216,11 +209,14 @@ IF task_category == ACTION:
 ```
 IF task is instance of recurring schedule:
     REQUIRE: recurring_task_id IS NOT NULL
-    INHERIT: name, task_type, task_category, expected_* from recurring_tasks
-    SET: status = PENDING (can be updated independently)
+    NOTE: Task has its own complete set of ALL task fields
+    NOTE: Fields are copied/populated when instance is generated from recurring pattern
+    SET: status = PENDING initially (can be updated independently)
+    SET: created_at to instance generation time
     
 IF task is standalone:
     SET: recurring_task_id = NULL
+    REQUIRE: All task fields must be provided directly
     EXAMPLES: "Buy groceries today", "Call dentist"
 ```
 
@@ -272,21 +268,22 @@ Requires UUID generation extensions (uuid-ossp or pgcrypto).
 
 ### Table: recurring_tasks
 
-The recurring_tasks table stores recurring task templates with:
-- Basic task properties (name, type, category, priority, expected_duration, expected_units)
+The recurring_tasks table stores recurrence patterns ONLY (no task data):
+- Template name/label for identification
 - Recurrence configuration (type, interval, days, day_of_month, pattern, end_date)
-- Status tracking (is_active, created_at, updated_at)
-- Validation constraints ensuring data consistency
+- Active status (is_active, created_at, updated_at)
+- Used by cron job to generate complete task instances in tasks table
 - Performance indexes on commonly queried fields
 
 ### Table: tasks
 
-The tasks table stores individual task instances with:
-- Task properties (name, type, category, status, priority)
-- Expectation and actual values (duration, units)
+The tasks table stores individual task instances with complete task data:
+- ALL task properties (name, type, category, status, priority, expected values)
+- Actual execution values (actual_duration, actual_units)
 - Success tracking (success_percentage, completed_at)
 - Optional deadline and notes
-- Link to recurring template (recurring_task_id)
+- Optional link to recurring pattern (recurring_task_id) - NULL for standalone tasks
+- Each task is a complete independent entity with all fields populated
 - Validation constraints ensuring proper task completion
 - Performance indexes on commonly queried fields
 

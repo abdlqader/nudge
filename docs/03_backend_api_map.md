@@ -153,9 +153,10 @@ All responses follow this envelope:
 ```
 
 **Note**: When `is_recurring: true` in LLM output:
-1. Backend creates entry in `recurring_tasks` table with recurrence fields
-2. Backend creates first task instance in `tasks` table linked via `recurring_task_id`
-3. Future instances generated automatically by cron job
+1. Backend creates entry in `recurring_tasks` table with recurrence pattern (type, interval, days, etc.)
+2. Backend creates first task instance in `tasks` table with ALL task fields (name, type, duration, priority, etc.)
+3. Each task instance is a complete, independent entity linked via `recurring_task_id`
+4. Future instances generated automatically by cron job with same task field values
 
 #### Response Schema (Needs Clarification)
 
@@ -421,8 +422,8 @@ GET /api/v1/tasks?recurring_task_id=<uuid>
 - Cannot change `task_category` after creation (linked to task_type)
 - Cannot modify `actual_duration` or `actual_units` (use `POST /tasks/{id}/complete` endpoint)
 - Cannot change `id`, `created_at`, `recurring_task_id`
-- Task instances (with `recurring_task_id` set) inherit properties from template
-- To modify recurrence schedule, use `PUT /recurring-tasks/{id}` on the template
+- Each task instance has its own complete set of fields - modifying a task only affects that specific instance
+- To change the pattern for future recurring instances, use `PUT /recurring-tasks/{id}` (doesn't affect existing instances)
 
 ---
 
@@ -487,23 +488,29 @@ GET /api/v1/tasks?recurring_task_id=<uuid>
 
 ### 7. POST /recurring-tasks - Create Recurring Task Template
 
-**Purpose**: Manually create a recurring task template without using natural language input.
+**Purpose**: Manually create a recurring task pattern. When creating a recurring pattern, you also specify the task field values that will be used when generating instances.
 
 #### Request Schema
 
 ```json
 {
   "name": "Weekly team meeting",
-  "task_type": "TIME_BASED",
-  "task_category": "ACTION",
-  "expected_duration": 60,
-  "priority": 3,
   "recurrence_type": "WEEKLY",
   "recurrence_days": [1, 3],
   "notes": "Every Monday and Wednesday",
-  "create_initial_instance": true
+  "create_initial_instance": true,
+  "task_template": {
+    "name": "Weekly team meeting",
+    "task_type": "TIME_BASED",
+    "task_category": "ACTION",
+    "expected_duration": 60,
+    "priority": 3,
+    "category": "Work"
+  }
 }
 ```
+
+**Note**: `task_template` object contains the task field values that will be used when generating task instances.
 
 #### Response Schema
 
@@ -522,8 +529,12 @@ GET /api/v1/tasks?recurring_task_id=<uuid>
     "initial_instance": {
       "id": "uuid",
       "name": "Weekly team meeting",
+      "task_type": "TIME_BASED",
+      "task_category": "ACTION",
+      "expected_duration": 60,
+      "priority": 3,
       "status": "PENDING",
-      "recurring_task_id": "uuid-of-template",
+      "recurring_task_id": "uuid-of-pattern",
       "created_at": "2026-02-18T15:40:00Z"
     }
   },
@@ -534,25 +545,29 @@ GET /api/v1/tasks?recurring_task_id=<uuid>
 
 ---
 
-### 8. PUT /recurring-tasks/{id} - Update Recurring Task Template
+### 8. PUT /recurring-tasks/{id} - Update Recurring Task Pattern
 
-**Purpose**: Update a recurring task template. Changes apply to future instances only.
+**Purpose**: Update a recurring task pattern. Changes apply to future generated instances only (doesn't modify existing task instances).
 
 #### Path Parameters
 
-- `id` (UUID, required) - Recurring task template ID
+- `id` (UUID, required) - Recurring task pattern ID
 
 #### Request Schema
 
 ```json
 {
-  "name": "Updated task name",
-  "expected_duration": 90,
-  "priority": 4,
+  "name": "Updated pattern name",
   "recurrence_interval": 2,
-  "is_active": false
+  "is_active": false,
+  "task_template": {
+    "expected_duration": 90,
+    "priority": 4
+  }
 }
 ```
+
+**Note**: Changes to `task_template` fields affect future instances only. Existing task instances remain unchanged.
 
 #### Response Schema
 
@@ -562,15 +577,13 @@ GET /api/v1/tasks?recurring_task_id=<uuid>
   "data": {
     "recurring_task": {
       "id": "uuid",
-      "name": "Updated task name",
-      "expected_duration": 90,
-      "priority": 4,
+      "name": "Updated pattern name",
       "recurrence_interval": 2,
       "is_active": false,
       "updated_at": "2026-02-18T15:45:00Z"
     }
   },
-  "message": "Recurring task updated successfully",
+  "message": "Recurring task pattern updated (future instances only)",
   "timestamp": "2026-02-18T15:45:00Z"
 }
 ```
