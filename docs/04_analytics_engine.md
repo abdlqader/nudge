@@ -175,7 +175,7 @@ The commute success calculation:
 ### 1.4 Unified Calculation Function
 
 The success percentage calculation handles all three task types:
-- Returns None if task is not completed
+- Returns null if task is not completed
 - For UNIT_BASED: (actual_units / expected_units) * 100, capped at 100
 - For TIME_BASED (non-commute): (expected_duration / actual_duration) * 100, capped at 150
 - For COMMUTE: 100 if on-time, otherwise (expected / actual) * 100
@@ -500,11 +500,11 @@ Outliers are identified using IQR (Interquartile Range) method:
 
 ## Code Generation Checklist
 
-- [ ] Implement `SuccessCalculator` class in `analytics/success_calculator.py`
-- [ ] Build `AggregationEngine` with direct query functions in `analytics/aggregation.py`
-- [ ] Create visualization formatters in `analytics/formatters.py`
-- [ ] Add caching layer (Redis) in `analytics/cache.py`
-- [ ] Write optimized SQL queries for date ranges in `analytics/queries.py`
+- [ ] Implement success calculation logic
+- [ ] Build aggregation engine with direct query functions
+- [ ] Create visualization data formatters
+- [ ] Add caching layer (Redis)
+- [ ] Write optimized SQL queries for date ranges
 - [ ] **Implement recurring task instance generator cron job (runs at midnight)**
 - [ ] **Add logic to skip invalid dates (e.g., Feb 31st) for monthly recurrences**
 - [ ] Add unit tests for all success formulas

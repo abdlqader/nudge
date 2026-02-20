@@ -492,11 +492,11 @@ If insufficient data: Show generic productivity tips instead of personalized adv
 
 ## 7. Code Generation Checklist
 
-- [ ] Implement pattern detection algorithms in `advisor/pattern_detection.py`
-- [ ] Build LLM integration in `advisor/insight_generator.py`
-- [ ] Create severity scoring in `advisor/prioritization.py`
-- [ ] Add notification service in `advisor/notifications.py`
-- [ ] Implement A/B testing framework in `advisor/experiments.py`
+- [ ] Implement pattern detection algorithms
+- [ ] Build LLM integration for insight generation
+- [ ] Create severity scoring logic
+- [ ] Add notification service
+- [ ] Implement A/B testing framework
 - [ ] Write unit tests for all detection algorithms
 - [ ] Add integration tests for end-to-end advice generation
 - [ ] Create dashboard view for advisor reports

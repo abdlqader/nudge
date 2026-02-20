@@ -1,7 +1,7 @@
 # Module 03: Backend API Map
 
 ## Overview
-This document defines the complete REST API architecture for Nudge, including all FastAPI endpoints, request/response schemas, authentication, rate limiting, and error handling.
+This document defines the complete REST API architecture for Nudge, including all HTTP endpoints, request/response schemas, authentication, rate limiting, and error handling.
 
 ---
 

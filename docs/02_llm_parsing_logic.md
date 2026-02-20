@@ -756,105 +756,6 @@ The system validates LLM output against a comprehensive JSON schema ensuring:
 - Date-time strings follow ISO 8601 format
 - Recurrence fields match recurrence_type requirements
 
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "required": ["tasks"],
-  "properties": {
-    "tasks": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 10,
-      "items": {
-        "type": "object",
-        "required": ["name", "task_type", "priority"],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "task_type": {
-            "type": "string",
-            "enum": ["UNIT_BASED", "TIME_BASED", "COMMUTE"]
-          },
-          "expected_duration": {
-            "type": ["integer", "null"],
-            "minimum": 1,
-            "maximum": 1440
-          },
-          "expected_units": {
-            "type": ["integer", "null"],
-            "minimum": 1,
-            "maximum": 1000
-          },
-          "priority": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 4
-          },
-          "category": {
-            "type": ["string", "null"],
-            "maxLength": 50
-          },
-          "deadline": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          },
-          "notes": {
-            "type": ["string", "null"],
-            "maxLength": 1000
-          },
-          "is_recurring": {
-            "type": "boolean"
-          },
-          "recurrence_type": {
-            "type": "string",
-            "enum": ["NONE", "DAILY", "WEEKLY", "MONTHLY_DATE", "MONTHLY_PATTERN"]
-          },
-          "recurrence_interval": {
-            "type": ["integer", "null"],
-            "minimum": 1
-          },
-          "recurrence_days": {
-            "type": ["array", "null"],
-            "items": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 6
-            }
-          },
-          "recurrence_day_of_month": {
-            "type": ["integer", "null"],
-            "minimum": 1,
-            "maximum": 31
-          },
-          "recurrence_pattern": {
-            "type": ["string", "null"],
-            "enum": [null, "first_monday", "first_tuesday", "first_wednesday", "first_thursday", "first_friday", "first_saturday", "first_sunday",
-                     "second_monday", "second_tuesday", "second_wednesday", "second_thursday", "second_friday", "second_saturday", "second_sunday",
-                     "third_monday", "third_tuesday", "third_wednesday", "third_thursday", "third_friday", "third_saturday", "third_sunday",
-                     "fourth_monday", "fourth_tuesday", "fourth_wednesday", "fourth_thursday", "fourth_friday", "fourth_saturday", "fourth_sunday",
-                     "last_monday", "last_tuesday", "last_wednesday", "last_thursday", "last_friday", "last_saturday", "last_sunday"]
-          },
-          "recurrence_end_date": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          },
-          "needs_clarification": {
-            "type": "boolean"
-          },
-          "clarification_question": {
-            "type": ["string", "null"]
-          }
-        }
-      }
-    }
-  }
-}
-```
-
 ### Business Rule Validation
 
 Post-LLM validation checks enforce business rules:
@@ -941,55 +842,12 @@ Context Payload:
 
 ### Unit Tests (Per Example)
 
-```python
-test_cases = [
-    {
-        "input": "Read 3 chapters of Atomic Habits today",
-        "expected": {
-            "name": "Read 3 chapters of Atomic Habits",
-            "task_type": "UNIT_BASED",
-            "expected_units": 3,
-            "is_recurring": false
-        }
-    },
-    {
-        "input": "Daily standup meeting at 9am, takes 15 minutes",
-        "expected": {
-            "name": "Daily standup meeting",
-            "task_type": "TIME_BASED",
-            "is_recurring": true,
-            "recurrence_type": "DAILY",
-            "recurrence_interval": 1
-        }
-    },
-    {
-        "input": "Team sync every Monday and Wednesday at 2pm for 1 hour",
-        "expected": {
-            "name": "Team sync",
-            "task_type": "TIME_BASED",
-            "is_recurring": true,
-            "recurrence_type": "WEEKLY",
-            "recurrence_days": [1, 3]
-        }
-    },
-    {
-        "input": "Board meeting on the first Monday of every month, 2 hours",
-        "expected": {
-            "name": "Board meeting",
-            "task_type": "TIME_BASED",
-            "is_recurring": true,
-            "recurrence_type": "MONTHLY_PATTERN",
-            "recurrence_pattern": "first_monday"
-        }
-    },
-    # ... all 13 examples above
-]
-
-for case in test_cases:
-    response = parse_with_llm(case["input"])
-    assert response["tasks"][0]["name"] == case["expected"]["name"]
-    assert response["tasks"][0]["task_type"] == case["expected"]["task_type"]
-```
+Test all 13 examples from the specification:
+- Example 1: "Read 3 chapters of Atomic Habits today" → UNIT_BASED
+- Example 10: "Daily standup meeting at 9am" → DAILY recurrence
+- Example 11: "Team sync every Monday and Wednesday" → WEEKLY recurrence  
+- Example 12: "Board meeting on the first Monday" → MONTHLY_PATTERN
+- All test cases validate correct JSON extraction
 
 ### Integration Tests
 

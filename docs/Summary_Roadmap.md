@@ -91,16 +91,27 @@ The system analyzes failure trends (Success < 40%) and provides actionable sched
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Backend** | FastAPI | RESTful API, async operations |
+| **Backend** | Go (Golang) | HTTP server, business logic |
+| **Database (Dev)** | SQLite (libSQL) | Local development database |
+| **Database (Prod)** | Turso (libSQL) | Production cloud database |
+| **Database Driver** | go-libsql | Unified driver for SQLite and Turso |
 | **LLM** | Qwen 8B / Gemini 1.5 | Natural language understanding |
-| **Database** | PostgreSQL | Persistent storage, scalability |
 | **Frontend** | React/Vue (future) | Dashboard and visualizations |
-| **Analytics** | Pandas + Matplotlib | Data processing and charts |
 | **Hosting** | Docker + Cloud Run | Containerized deployment |
 
----
+### Environment Configuration
 
-## Module Breakdown & Development Sequence
+The application requires environment variables for database configuration:
+
+**Development (Local SQLite)**
+- `DB_URL`: `file:local.db`
+- `DB_TOKEN`: Empty (not required)
+
+**Production (Turso)**
+- `DB_URL`: `libsql://your-database.turso.io`
+- `DB_TOKEN`: Authentication token from Turso
+- Easy local development without cloud dependencies
+- Seamless deployment to Turso production
 
 ### **Phase 1: Foundation Layer** (Week 1-2)
 
@@ -108,10 +119,11 @@ The system analyzes failure trends (Success < 40%) and provides actionable sched
 **File**: `01_data_schema.md`
 
 **Deliverables**:
-- Pydantic models for all entities
-- PostgreSQL schema definitions
-- Migration scripts
+- Data models for all entities
+- libSQL database schema (SQLite/Turso compatible)
+- Migration strategy
 - Validation rules
+- Database connection logic with environment variable support
 
 **Key Entities**:
 - Tasks (task instances with task_category, linked to recurring_tasks via recurring_task_id)
@@ -143,7 +155,8 @@ The system analyzes failure trends (Success < 40%) and provides actionable sched
 **File**: `03_backend_api_map.md`
 
 **Deliverables**:
-- FastAPI endpoint specifications
+- HTTP server specifications
+- REST API endpoint definitions
 - Request/Response schemas
 - Authentication flow (optional Phase 2)
 - Rate limiting strategy
@@ -200,11 +213,21 @@ The system analyzes failure trends (Success < 40%) and provides actionable sched
 - [ ] Finalize data models
 
 ### Stage 2: Backend Development
-1. Setup FastAPI project structure
-2. Implement data models and migrations
-3. Build core CRUD endpoints
-4. Integrate LLM parsing layer
-5. Develop analytics engine
+1. Setup Go project structure with modules
+2. Implement GORM models and auto-migration
+3. Create database connection with environment variable support
+4. Build HTTP server with Gin framework
+5. Implement REST API handlers
+6. Integrate LLM parsing layer
+7. Develop analytics engine
+8. Add middleware (CORS, rate limiting, auth)
+
+**Initial Setup:**
+1. Initialize Go module
+2. Install required dependencies (database driver, HTTP framework, environment config)
+3. Create .env file with DB_URL and DB_TOKEN
+4. Run database migrations
+5. Start HTTP server
 
 ### Stage 3: Testing & Validation
 1. Unit tests for all API endpoints

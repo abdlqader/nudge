@@ -1,7 +1,7 @@
 # Module 01: Data Schema Design
 
 ## Overview
-This document defines the complete data architecture for the Nudge application, including Pydantic models for API validation, PostgreSQL schema for persistence, and business logic constraints.
+This document defines the complete data architecture for the Nudge application, including data models, libSQL database for persistence (SQLite for development, Turso for production), and business logic constraints.
 
 ---
 
@@ -9,9 +9,39 @@ This document defines the complete data architecture for the Nudge application, 
 
 1. **Immutability**: Tasks maintain history through status changes, not deletions
 2. **Audit Trail**: All modifications are timestamped
-3. **Type Safety**: Strong typing through Pydantic
+3. **Type Safety**: Strong typing through backend models
 4. **Flexibility**: Support both unit-based and time-based tasks
 5. **Commute Integration**: Commutes are tasks with special flags
+6. **Environment-Based Configuration**: Seamless switching between local SQLite and Turso production database
+
+---
+
+## Database Configuration
+
+### Environment Variables
+
+The application requires environment variables for database configuration:
+
+**Development (Local SQLite)**
+- `DB_URL`: `file:local.db`
+- `DB_TOKEN`: Empty (not required)
+
+**Production (Turso)**
+- `DB_URL`: `libsql://your-database.turso.io`
+- `DB_TOKEN`: Authentication token from Turso
+
+### Database Strategy
+
+| Environment | Driver | Connection String | Authentication |
+|-------------|--------|-------------------|----------------|
+| **Development** | libSQL | `file:local.db` | None required |
+| **Production** | libSQL | `libsql://your-db.turso.io` | DB_TOKEN required |
+
+**Benefits**:
+- Same libSQL driver for both environments
+- Zero code changes when switching environments
+- ORM provides database-agnostic layer
+- Easy local development without cloud dependencies
 
 ---
 
@@ -50,7 +80,7 @@ Note: Daily statistics are computed on-demand via queries on the tasks table.
 ### Purpose
 Defines recurrence patterns for task schedules. This table contains ONLY recurrence configuration - NOT task properties. When active, the system generates task instances in the `tasks` table based on these patterns.
 
-### Pydantic Model Specification
+### Model Specification
 
 RecurrenceType (Enum):
 - DAILY: Repeats every day or every N days
@@ -121,7 +151,7 @@ IF recurrence_type == MONTHLY_PATTERN:
 ### Purpose
 Represents a single actionable item with success tracking capabilities. Each task is a complete, independent entity with all task properties. Can be standalone or generated from a recurring schedule (linked via `recurring_task_id`).
 
-### Pydantic Model Specification
+### Model Specification
 
 TaskType (Enum):
 - UNIT_BASED: Tasks measured in discrete units (e.g., "read 3 chapters")
@@ -221,27 +251,27 @@ IF task is standalone:
 ```
 
 **Success Calculation** (Computed Field):
-```
-WHEN status == COMPLETED:
-    IF task_type == UNIT_BASED:
-        success_percentage = (actual_units / expected_units) × 100
-        CLAMP to [0, 100]
-        
-    IF task_type == TIME_BASED AND NOT is_commute:
-        # Faster is better
-        success_percentage = (expected_duration / actual_duration) × 100
-        CLAMP to [0, 150]  # Allow overachievement
-        
-    IF task_type == COMMUTE:
-        # On-time is ideal
-        IF actual_duration <= expected_duration:
-            success_percentage = 100
-        ELSE:
-            success_percentage = (expected_duration / actual_duration) × 100
-            CLAMP to [0, 100]
-ELSE:
-    success_percentage = NULL
-```
+
+Calculation rules based on task type:
+- Only calculated for completed tasks
+- Returns error if required fields are missing
+
+**UNIT_BASED**:
+- Formula: (actual_units / expected_units) × 100
+- Capped at 100% (cannot exceed expected)
+- Requires: expected_units and actual_units
+
+**TIME_BASED (non-commute)**:
+- Formula: (expected_duration / actual_duration) × 100
+- Capped at 150% (allows overachievement)
+- Faster completion = higher success
+- Requires: expected_duration and actual_duration
+
+**TIME_BASED (commute) / COMMUTE**:
+- On-time or early: 100%
+- Late: (expected_duration / actual_duration) × 100
+- Capped at 100%
+- Requires: expected_duration and actual_duration
 
 ---
 
@@ -260,11 +290,28 @@ Track success rates by user-defined categories (Work, Personal, Health, etc.)
 
 ---
 
-## PostgreSQL Schema Definition
+## LibSQL Database Schema
 
-### Extensions
+### Database Setup
 
-Requires UUID generation extensions (uuid-ossp or pgcrypto).
+#### Connection Logic
+
+The application connects to the database based on environment variables:
+- Reads `DB_URL` and `DB_TOKEN` from `.env` file
+- If `DB_TOKEN` is provided: connects to Turso (production)
+- If `DB_TOKEN` is empty: connects to local SQLite (development)
+- Uses libSQL driver for both environments
+
+### Switching to Production
+
+To switch from local development to Turso production:
+
+1. Create Turso database and obtain connection URL
+2. Generate authentication token for the database
+3. Update `.env` file with production values:
+   - `DB_URL`: Change from `file:local.db` to `libsql://your-db.turso.io`
+   - `DB_TOKEN`: Add your Turso authentication token
+4. No code changes required - connection logic handles both environments
 
 ### Table: recurring_tasks
 
@@ -314,7 +361,7 @@ Future migration will add:
 
 ## Data Validation Rules
 
-### Pre-Insert Validation (Pydantic)
+### Pre-Insert Validation
 
 | Rule | Description | Error Message |
 |------|-------------|---------------|
@@ -357,7 +404,7 @@ Future migration will add:
     "task_category": "ACTION",
     "expected_duration": 120,
     "actual_duration": 90,
-    "success_percentage": 133.33  // Finished faster
+    "success_percentage": 133.33
 }
 ```
 
@@ -370,7 +417,7 @@ Future migration will add:
     "is_commute": true,
     "expected_duration": 30,
     "actual_duration": 45,
-    "success_percentage": 66.67  // Late arrival
+    "success_percentage": 66.67
 }
 ```
 
@@ -494,21 +541,20 @@ Future migration will add:
 
 ## Code Generation Checklist (For Coding Agent)
 
-- [ ] Create Pydantic models in `models/task.py`
-- [ ] Create Pydantic models in `models/recurring_task.py`
-- [ ] Create SQLAlchemy ORM models in `db/models.py`
-- [ ] Write migration script `migrations/001_initial_schema.sql`
-- [ ] Write migration script `migrations/002_add_recurring_tasks.sql`
-- [ ] Implement success calculation in `utils/success_calculator.py`
-- [ ] **Implement recurring task instance generator in `tasks/recurring_generator.py`**
+- [ ] Create backend models for Task entity
+- [ ] Create backend models for RecurringTask entity
+- [ ] Create database connection logic with environment variable support
+- [ ] Implement database migration/initialization
+- [ ] Implement success calculation logic
+- [ ] **Implement recurring task instance generator**
 - [ ] **Add cron job for daily task instance generation (runs at midnight)**
 - [ ] **Add function to calculate next occurrence date for each recurrence type**
-- [ ] **Implement direct query functions for statistics aggregation in `analytics/queries.py`**
-- [ ] Add validation decorators for business logic
+- [ ] **Implement direct query functions for statistics aggregation**
+- [ ] Add validation hooks and business logic enforcement
 - [ ] Write unit tests for all validation rules
 - [ ] **Write unit tests for recurrence date calculations**
-- [ ] Create database initialization script `db/init_db.py`
-- [ ] Add example seed data script `db/seed_data.py`
+- [ ] Create database initialization logic
+- [ ] Add example seed data
 
 ---
 
