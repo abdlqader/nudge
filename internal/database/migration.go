@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"nudge/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -10,14 +11,15 @@ import (
 func Migrate() error {
 	log.Println("Running database migrations...")
 
-	// Auto-migrate all models here
-	// Example: err := DB.AutoMigrate(&models.Task{}, &models.RecurringTask{})
+	// Auto-migrate all models
+	err := DB.AutoMigrate(
+		&models.RecurringTask{},
+		&models.Task{},
+	)
 	
-	// TODO: Add models when they are created
-	// err := DB.AutoMigrate(
-	//     &models.RecurringTask{},
-	//     &models.Task{},
-	// )
+	if err != nil {
+		return err
+	}
 	
 	log.Println("Database migrations completed successfully")
 	return nil
@@ -42,13 +44,15 @@ func DropAllTables(models ...interface{}) error {
 func CreateIndexes() error {
 	log.Println("Creating custom indexes...")
 
-	// TODO: Add custom indexes when models are created
-	// Examples:
-	// DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)")
-	// DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)")
-	// DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_completed_at ON tasks(completed_at)")
-	// DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_recurring_id ON tasks(recurring_task_id)")
-	// DB.Exec("CREATE INDEX IF NOT EXISTS idx_recurring_tasks_active ON recurring_tasks(is_active)")
+	// Task indexes for performance
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_completed_at ON tasks(completed_at)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_recurring_id ON tasks(recurring_task_id)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_tasks_is_commute ON tasks(is_commute)")
+	
+	// RecurringTask indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_recurring_tasks_active ON recurring_tasks(is_active)")
 
 	log.Println("Custom indexes created successfully")
 	return nil
