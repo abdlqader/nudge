@@ -66,7 +66,7 @@ func (t *Task) CalculateSuccess() *float64 {
 	var successTime float64
 	var successUnit float64
 
-	if !t.ExpectedDuration.Valid || !t.ActualDuration.Valid {
+	if t.ExpectedDuration.Valid || t.ActualDuration.Valid {
 		successTime = (float64(t.ExpectedDuration.Int32) / float64(t.ActualDuration.Int32)) * 100
 		if successTime > 100 {
 			successTime = 100
