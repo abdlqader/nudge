@@ -13,6 +13,7 @@ func Migrate() error {
 
 	// Auto-migrate all models
 	err := DB.AutoMigrate(
+		&models.User{},
 		&models.Task{},
 	)
 

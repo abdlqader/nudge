@@ -18,9 +18,25 @@ func Seed() error {
 
 	log.Println("Seeding database with sample data...")
 
-	// Sample Tasks
+	// Create a sample user
+	user := models.User{
+		Email:     "admin@mk.com",
+		FirstName: "Mo",
+		LastName:  "Ka",
+	}
+	user.HashPassword("Testing123")
+
+	// Create the user in database
+	if err := DB.Create(&user).Error; err != nil {
+		log.Printf("Failed to create user: %v", err)
+		return err
+	}
+	log.Printf("Created user: %s %s (%s)", user.FirstName, user.LastName, user.Email)
+
+	// Sample Tasks (linked to the user)
 	tasks := []models.Task{
 		{
+			UserID:           user.ID,
 			Name:             "Read book",
 			TaskCategory:     models.TaskCategoryAction,
 			Status:           models.TaskStatusDeferred,
@@ -29,6 +45,7 @@ func Seed() error {
 			Category:         strPtr("Personal"),
 		},
 		{
+			UserID:           user.ID,
 			Name:             "Work on project",
 			TaskCategory:     models.TaskCategoryAction,
 			Status:           models.TaskStatusCreated,
@@ -37,6 +54,7 @@ func Seed() error {
 			Category:         strPtr("Work"),
 		},
 		{
+			UserID:           user.ID,
 			Name:             "Morning jog",
 			TaskCategory:     models.TaskCategoryAction,
 			Status:           models.TaskStatusCompleted,
@@ -72,6 +90,7 @@ func ClearData() error {
 	log.Println("WARNING: Clearing all data from database...")
 
 	DB.Exec("DELETE FROM tasks")
+	DB.Exec("DELETE FROM users")
 
 	log.Println("All data cleared")
 	return nil
