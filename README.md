@@ -2,27 +2,6 @@
 
 A task management and productivity tracking application.
 
-## Project Structure
-
-```
-nudge/
-├── config/              # Application configuration
-│   └── config.go        # Environment variables and config loading
-├── internal/
-│   ├── database/        # Database layer
-│   │   ├── database.go  # Connection logic (SQLite/Turso)
-│   │   ├── migration.go # Schema migrations
-│   │   └── seed.go      # Seed data for development
-│   └── models/          # Database models (GORM)
-│       └── models.go    # Model definitions
-├── docs/                # Documentation
-├── main.go              # Application entry point
-├── go.mod               # Go module definition
-├── .env                 # Environment variables (local)
-├── .env.example         # Environment variables template
-└── .gitignore           # Git ignore rules
-```
-
 ## Setup
 
 ### Prerequisites
@@ -32,23 +11,17 @@ nudge/
 
 ### Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd nudge
-```
-
-2. Copy the example environment file:
+1. Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 go mod download
 ```
 
-4. Run the application:
+3. Run the application:
 ```bash
 go run main.go
 ```
