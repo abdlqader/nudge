@@ -2,6 +2,7 @@ package routes
 
 import (
 	"nudge/internal/handlers"
+	"nudge/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,11 +16,22 @@ func SetupRouter() *gin.Engine {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// Auth routes
+	// Auth routes (public)
 	auth := router.Group("/auth")
 	{
 		auth.POST("/register", handlers.Register)
 		auth.POST("/login", handlers.Login)
+	}
+
+	// Task routes (protected)
+	tasks := router.Group("/tasks")
+	tasks.Use(middleware.AuthMiddleware())
+	{
+		tasks.POST("", handlers.CreateTask)
+		tasks.GET("", handlers.GetTasks)
+		tasks.GET("/:id", handlers.GetTask)
+		tasks.PUT("/:id", handlers.UpdateTask)
+		tasks.DELETE("/:id", handlers.DeleteTask)
 	}
 
 	return router
