@@ -41,10 +41,10 @@ func main() {
 	// Setup and start HTTP server
 	router := routes.SetupRouter()
 	address := fmt.Sprintf(":%s", config.AppConfig.Port)
-	
+
 	log.Printf("Starting server on port %s...", config.AppConfig.Port)
 	log.Println("Nudge is ready!")
-	
+
 	if err := router.Run(address); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

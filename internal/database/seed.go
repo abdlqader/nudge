@@ -21,7 +21,7 @@ func Seed() error {
 	// Create a sample user (check if already exists)
 	var existingUser models.User
 	err := DB.Where("email = ?", "admin@mk.com").First(&existingUser).Error
-	
+
 	var user models.User
 	if err != nil {
 		// User doesn't exist, create it
@@ -46,7 +46,7 @@ func Seed() error {
 	// Check if tasks already exist for this user
 	var taskCount int64
 	DB.Model(&models.Task{}).Where("user_id = ?", user.ID).Count(&taskCount)
-	
+
 	if taskCount > 0 {
 		log.Printf("Tasks already exist for user (%d tasks found), skipping task seeding", taskCount)
 	} else {
