@@ -32,9 +32,10 @@ type Task struct {
 	ActualUnits    sql.NullInt32 `gorm:"type:int"` // quantity (0-expected_units)
 
 	// Metadata
-	Category *string    `gorm:"type:varchar(50)"` // User-defined tag
-	Notes    *string    `gorm:"type:text"`        // Description or comments about the task
-	Deadline *time.Time `gorm:"type:datetime"`
+	Category *string       `gorm:"type:varchar(50)"` // User-defined tag
+	Notes    *string       `gorm:"type:text"`        // Description or comments about the task
+	Deadline *time.Time    `gorm:"type:datetime"`
+	StartAt  sql.NullInt32 `gorm:"type:int"` // Minutes since midnight (0-1439), e.g., 90 = 1:30 AM, 810 = 1:30 PM
 
 	// Timestamps
 	CreatedAt   time.Time  `gorm:"not null;autoCreateTime;index"`

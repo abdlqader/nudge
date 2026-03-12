@@ -43,6 +43,7 @@ func Seed() error {
 			ExpectedUnits:    sql.NullInt32{Int32: 3, Valid: true},
 			ExpectedDuration: sql.NullInt32{Int32: 90, Valid: true},
 			Category:         strPtr("Personal"),
+			StartAt:          sql.NullInt32{Int32: 1200, Valid: true}, // 8:00 PM (20:00)
 		},
 		{
 			UserID:           user.ID,
@@ -52,6 +53,7 @@ func Seed() error {
 			ExpectedDuration: sql.NullInt32{Int32: 120, Valid: true},
 			Deadline:         timePtr(time.Now().Add(48 * time.Hour)),
 			Category:         strPtr("Work"),
+			StartAt:          sql.NullInt32{Int32: 570, Valid: true}, // 9:30 AM
 		},
 		{
 			UserID:           user.ID,
@@ -63,6 +65,7 @@ func Seed() error {
 			CompletedAt:      timePtr(time.Now().Add(-2 * time.Hour)),
 			Notes:            strPtr("Felt great, but took a bit longer than expected"),
 			Category:         strPtr("Health"),
+			StartAt:          sql.NullInt32{Int32: 360, Valid: true}, // 6:00 AM
 		},
 	}
 
