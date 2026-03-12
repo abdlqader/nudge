@@ -136,15 +136,44 @@ func GetTasks(c *gin.Context) {
 
 	// Query parameters for filtering
 	status := c.Query("status")
+	taskCategory := c.Query("task_category")
 	category := c.Query("category")
+	search := c.Query("search")
 
 	query := database.DB.Where("user_id = ?", userID)
 
+	// Apply filters with validation
+	// Status filter - validate against allowed values
 	if status != "" {
-		query = query.Where("status = ?", status)
+		validStatuses := []string{"CREATED", "COMPLETED", "FAILED", "DEFERRED"}
+		if isValidValue(status, validStatuses) {
+			query = query.Where("status = ?", status)
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status value"})
+			return
+		}
 	}
+
+	// Task category filter - validate against allowed values
+	if taskCategory != "" {
+		validCategories := []string{"ACTION", "ANCHOR", "TRANSIT"}
+		if isValidValue(taskCategory, validCategories) {
+			query = query.Where("task_category = ?", taskCategory)
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task_category value"})
+			return
+		}
+	}
+
+	// Category filter - parameterized query is safe
 	if category != "" {
 		query = query.Where("category = ?", category)
+	}
+
+	// Search filter - parameterized query with LIKE is safe
+	// GORM handles the parameter binding safely
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
 	var tasks []models.Task
@@ -339,4 +368,14 @@ func taskToResponse(task models.Task) TaskResponse {
 	}
 
 	return response
+}
+
+// isValidValue checks if a value exists in the allowed list
+func isValidValue(value string, allowedValues []string) bool {
+	for _, allowed := range allowedValues {
+		if value == allowed {
+			return true
+		}
+	}
+	return false
 }

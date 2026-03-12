@@ -314,16 +314,30 @@
 								{
 									"key": "status",
 									"value": "CREATED",
+									"description": "Filter by task status (CREATED, COMPLETED, FAILED, DEFERRED)",
+									"disabled": true
+								},
+								{
+									"key": "task_category",
+									"value": "ACTION",
+									"description": "Filter by task category (ACTION, ANCHOR, TRANSIT)",
 									"disabled": true
 								},
 								{
 									"key": "category",
 									"value": "Work",
+									"description": "Filter by user-defined category",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "documentation",
+									"description": "Search in task name (partial match)",
 									"disabled": true
 								}
 							]
 						},
-						"description": "Retrieves all tasks for the authenticated user. Supports optional filtering by status and category."
+						"description": "Retrieves all tasks for the authenticated user. Supports optional filtering by status, task_category, category, and searching in task name. All filters can be combined or used individually."
 					},
 					"response": [
 						{
