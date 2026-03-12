@@ -8,9 +8,11 @@ import (
 )
 
 type Config struct {
-	DBUrl   string
-	DBToken string
-	Env     string
+	DBUrl     string
+	DBToken   string
+	Env       string
+	JWTSecret string
+	Port      string
 }
 
 var AppConfig *Config
@@ -21,9 +23,11 @@ func Load() {
 	_ = godotenv.Load()
 
 	AppConfig = &Config{
-		DBUrl:   getEnv("DB_URL", "file:local.db"),
-		DBToken: getEnv("DB_TOKEN", ""),
-		Env:     getEnv("ENV", "development"),
+		DBUrl:     getEnv("DB_URL", "file:local.db"),
+		DBToken:   getEnv("DB_TOKEN", ""),
+		Env:       getEnv("ENV", "development"),
+		JWTSecret: getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
+		Port:      getEnv("PORT", "8080"),
 	}
 
 	log.Printf("Configuration loaded - Environment: %s, DB: %s", AppConfig.Env, AppConfig.DBUrl)
