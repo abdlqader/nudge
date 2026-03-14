@@ -11,6 +11,9 @@ import (
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
+	// Add logging middleware to log all requests and responses
+	router.Use(middleware.LoggingMiddleware())
+
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
