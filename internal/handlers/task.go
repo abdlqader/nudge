@@ -61,7 +61,18 @@ type TaskResponse struct {
 	CompletedAt      *time.Time `json:"completed_at,omitempty"`
 }
 
-// CreateTask creates a new task for the authenticated user
+// CreateTask creates a new task for the authenticated user.
+//
+// @Summary      Create a new task
+// @Tags         Tasks
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      CreateTaskRequest      true  "Task creation payload"
+// @Success      201      {object}  map[string]interface{}
+// @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
+// @Router       /tasks [post]
 func CreateTask(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
@@ -130,7 +141,20 @@ func CreateTask(c *gin.Context) {
 	})
 }
 
-// GetTasks retrieves all tasks for the authenticated user
+// GetTasks retrieves all tasks for the authenticated user.
+//
+// @Summary      List all tasks
+// @Tags         Tasks
+// @Security     BearerAuth
+// @Produce      json
+// @Param        status         query  string  false  "Filter by status"       Enums(CREATED,COMPLETED,FAILED,DEFERRED)
+// @Param        task_category  query  string  false  "Filter by category"     Enums(ACTION,ANCHOR,TRANSIT)
+// @Param        category       query  string  false  "Filter by user tag"
+// @Param        search         query  string  false  "Search tasks by name"
+// @Success      200            {object}  map[string]interface{}
+// @Failure      400            {object}  map[string]string
+// @Failure      401            {object}  map[string]string
+// @Router       /tasks [get]
 func GetTasks(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
@@ -193,7 +217,18 @@ func GetTasks(c *gin.Context) {
 	})
 }
 
-// GetTask retrieves a single task by ID for the authenticated user
+// GetTask retrieves a single task by ID for the authenticated user.
+//
+// @Summary      Get a task by ID
+// @Tags         Tasks
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id   path      string  true  "Task UUID"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /tasks/{id} [get]
 func GetTask(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 	taskID := c.Param("id")
@@ -215,7 +250,20 @@ func GetTask(c *gin.Context) {
 	})
 }
 
-// UpdateTask updates a task for the authenticated user
+// UpdateTask updates a task for the authenticated user.
+//
+// @Summary      Update a task
+// @Tags         Tasks
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string             true  "Task UUID"
+// @Param        request  body      UpdateTaskRequest  true  "Task update payload (all fields optional)"
+// @Success      200      {object}  map[string]interface{}
+// @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Router       /tasks/{id} [put]
 func UpdateTask(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 	taskID := c.Param("id")
@@ -308,7 +356,18 @@ func UpdateTask(c *gin.Context) {
 	})
 }
 
-// DeleteTask deletes a task for the authenticated user
+// DeleteTask deletes a task for the authenticated user.
+//
+// @Summary      Delete a task
+// @Tags         Tasks
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id   path      string  true  "Task UUID"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /tasks/{id} [delete]
 func DeleteTask(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 	taskID := c.Param("id")

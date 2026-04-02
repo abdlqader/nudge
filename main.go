@@ -1,9 +1,19 @@
+// @title           Nudge API
+// @version         1.0
+// @description     Nudge application backend for user management and task tracking.
+// @host            localhost:8080
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     JWT bearer token. Format: "Bearer <token>"
 package main
 
 import (
 	"fmt"
 	"log"
 	"nudge/config"
+	_ "nudge/docs"
 	"nudge/internal/database"
 	"nudge/internal/routes"
 )

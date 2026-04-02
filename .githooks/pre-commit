@@ -1,0 +1,5 @@
+#!/bin/sh
+# Regenerate OpenAPI spec before every commit so docs/swagger.yaml stays in sync.
+echo "Regenerating OpenAPI spec..."
+swag init -g main.go --output docs
+git add docs/

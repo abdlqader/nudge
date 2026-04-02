@@ -5,6 +5,8 @@ import (
 	"nudge/internal/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRouter configures all application routes
@@ -13,6 +15,9 @@ func SetupRouter() *gin.Engine {
 
 	// Add logging middleware to log all requests and responses
 	router.Use(middleware.LoggingMiddleware())
+
+	// Swagger UI (development)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {

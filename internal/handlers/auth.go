@@ -39,7 +39,17 @@ type UserResponse struct {
 	LastName  string `json:"last_name"`
 }
 
-// Register creates a new user account
+// Register creates a new user account.
+//
+// @Summary      Register a new user
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      RegisterRequest        true  "Registration payload"
+// @Success      201      {object}  map[string]interface{}
+// @Failure      400      {object}  map[string]string
+// @Failure      409      {object}  map[string]string
+// @Router       /auth/register [post]
 func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -82,7 +92,17 @@ func Register(c *gin.Context) {
 	})
 }
 
-// Login authenticates a user and returns a JWT token
+// Login authenticates a user and returns a JWT token.
+//
+// @Summary      Login
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      LoginRequest   true  "Login payload"
+// @Success      200      {object}  LoginResponse
+// @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
+// @Router       /auth/login [post]
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
