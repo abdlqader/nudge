@@ -23,7 +23,7 @@ type CreateTaskRequest struct {
 	Category         *string `json:"category"`
 	Notes            *string `json:"notes"`
 	Deadline         *string `json:"deadline"` // ISO 8601 format
-	StartAt          *int32  `json:"start_at" binding:"omitempty,min=0,max=1439"`
+	StartAt          *string `json:"start_at"` // ISO 8601 format
 }
 
 // UpdateTaskRequest represents the task update payload
@@ -38,7 +38,7 @@ type UpdateTaskRequest struct {
 	Category         *string `json:"category"`
 	Notes            *string `json:"notes"`
 	Deadline         *string `json:"deadline"` // ISO 8601 format, empty string to clear
-	StartAt          *int32  `json:"start_at" binding:"omitempty,min=0,max=1439"`
+	StartAt          *string `json:"start_at"` // ISO 8601 format, empty string to clear
 }
 
 // TaskResponse represents task data in responses
@@ -55,7 +55,7 @@ type TaskResponse struct {
 	Category         *string    `json:"category,omitempty"`
 	Notes            *string    `json:"notes,omitempty"`
 	Deadline         *time.Time `json:"deadline,omitempty"`
-	StartAt          *int32     `json:"start_at,omitempty"`
+	StartAt          *time.Time `json:"start_at,omitempty"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
 	CompletedAt      *time.Time `json:"completed_at,omitempty"`
@@ -107,8 +107,13 @@ func CreateTask(c *gin.Context) {
 	if req.ActualUnits != nil {
 		task.ActualUnits = sql.NullInt32{Int32: *req.ActualUnits, Valid: true}
 	}
-	if req.StartAt != nil {
-		task.StartAt = sql.NullInt32{Int32: *req.StartAt, Valid: true}
+	if req.StartAt != nil && *req.StartAt != "" {
+		startAt, err := time.Parse(time.RFC3339, *req.StartAt)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_at format, use ISO 8601"})
+			return
+		}
+		task.StartAt = &startAt
 	}
 
 	task.Category = req.Category
@@ -321,7 +326,16 @@ func UpdateTask(c *gin.Context) {
 		task.ActualUnits = sql.NullInt32{Int32: *req.ActualUnits, Valid: true}
 	}
 	if req.StartAt != nil {
-		task.StartAt = sql.NullInt32{Int32: *req.StartAt, Valid: true}
+		if *req.StartAt == "" {
+			task.StartAt = nil
+		} else {
+			startAt, err := time.Parse(time.RFC3339, *req.StartAt)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_at format, use ISO 8601"})
+				return
+			}
+			task.StartAt = &startAt
+		}
 	}
 
 	if req.Category != nil {
@@ -422,9 +436,7 @@ func taskToResponse(task models.Task) TaskResponse {
 	if task.ActualUnits.Valid {
 		response.ActualUnits = &task.ActualUnits.Int32
 	}
-	if task.StartAt.Valid {
-		response.StartAt = &task.StartAt.Int32
-	}
+	response.StartAt = task.StartAt
 
 	return response
 }

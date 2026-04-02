@@ -27,9 +27,8 @@ definitions:
       notes:
         type: string
       start_at:
-        maximum: 1439
-        minimum: 0
-        type: integer
+        description: ISO 8601 format
+        type: string
       status:
         enum:
         - CREATED
@@ -108,9 +107,8 @@ definitions:
       notes:
         type: string
       start_at:
-        maximum: 1439
-        minimum: 0
-        type: integer
+        description: ISO 8601 format, empty string to clear
+        type: string
       status:
         enum:
         - CREATED

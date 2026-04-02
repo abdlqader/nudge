@@ -486,9 +486,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_at": {
-                    "type": "integer",
-                    "maximum": 1439,
-                    "minimum": 0
+                    "description": "ISO 8601 format",
+                    "type": "string"
                 },
                 "status": {
                     "type": "string",
@@ -595,9 +594,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_at": {
-                    "type": "integer",
-                    "maximum": 1439,
-                    "minimum": 0
+                    "description": "ISO 8601 format, empty string to clear",
+                    "type": "string"
                 },
                 "status": {
                     "type": "string",
