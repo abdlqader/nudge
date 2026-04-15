@@ -15,6 +15,7 @@ func Migrate() error {
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.Task{},
+		&models.RecurringTask{},
 	)
 
 	if err != nil {

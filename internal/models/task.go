@@ -16,6 +16,9 @@ type Task struct {
 	UserID uuid.UUID `gorm:"type:char(36);not null;index"`
 	User   User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 
+	// Recurring task link (optional)
+	RecurringTaskID *uuid.UUID `gorm:"type:char(36);index"`
+
 	// Basic Information
 	Name         string       `gorm:"type:varchar(200);not null"`
 	TaskCategory TaskCategory `gorm:"type:varchar(50);not null;default:'ACTION'"`

@@ -485,6 +485,9 @@ const docTemplate = `{
                 "notes": {
                     "type": "string"
                 },
+                "recurring_task_id": {
+                    "type": "string"
+                },
                 "start_at": {
                     "description": "ISO 8601 format",
                     "type": "string"

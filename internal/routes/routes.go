@@ -42,5 +42,16 @@ func SetupRouter() *gin.Engine {
 		tasks.DELETE("/:id", handlers.DeleteTask)
 	}
 
+	// Recurring task routes (protected)
+	recurringTasks := router.Group("/recurring-tasks")
+	recurringTasks.Use(middleware.AuthMiddleware())
+	{
+		recurringTasks.POST("", handlers.CreateRecurringTask)
+		recurringTasks.GET("", handlers.GetRecurringTasks)
+		recurringTasks.GET("/:id", handlers.GetRecurringTask)
+		recurringTasks.PUT("/:id", handlers.UpdateRecurringTask)
+		recurringTasks.DELETE("/:id", handlers.DeleteRecurringTask)
+	}
+
 	return router
 }

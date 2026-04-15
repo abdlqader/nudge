@@ -17,3 +17,12 @@ const (
 	TaskStatusFailed    TaskStatus = "FAILED"
 	TaskStatusDeferred  TaskStatus = "DEFERRED"
 )
+
+type RecurrenceType string
+
+const (
+	RecurrenceTypeDaily          RecurrenceType = "DAILY"
+	RecurrenceTypeWeekly         RecurrenceType = "WEEKLY"
+	RecurrenceTypeMonthlyDate    RecurrenceType = "MONTHLY_DATE"
+	RecurrenceTypeMonthlyPattern RecurrenceType = "MONTHLY_PATTERN"
+)

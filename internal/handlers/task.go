@@ -24,6 +24,7 @@ type CreateTaskRequest struct {
 	Notes            *string `json:"notes"`
 	Deadline         *string `json:"deadline"` // ISO 8601 format
 	StartAt          *string `json:"start_at"` // ISO 8601 format
+	RecurringTaskID  *string `json:"recurring_task_id"`
 }
 
 // UpdateTaskRequest represents the task update payload
@@ -59,6 +60,7 @@ type TaskResponse struct {
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
 	CompletedAt      *time.Time `json:"completed_at,omitempty"`
+	RecurringTaskID  *string    `json:"recurring_task_id,omitempty"`
 }
 
 // CreateTask creates a new task for the authenticated user.
@@ -118,6 +120,16 @@ func CreateTask(c *gin.Context) {
 
 	task.Category = req.Category
 	task.Notes = req.Notes
+
+	// Link to recurring task template if provided
+	if req.RecurringTaskID != nil && *req.RecurringTaskID != "" {
+		rtID, err := uuid.Parse(*req.RecurringTaskID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recurring_task_id"})
+			return
+		}
+		task.RecurringTaskID = &rtID
+	}
 
 	// Parse deadline if provided
 	if req.Deadline != nil && *req.Deadline != "" {
@@ -437,6 +449,11 @@ func taskToResponse(task models.Task) TaskResponse {
 		response.ActualUnits = &task.ActualUnits.Int32
 	}
 	response.StartAt = task.StartAt
+
+	if task.RecurringTaskID != nil {
+		id := task.RecurringTaskID.String()
+		response.RecurringTaskID = &id
+	}
 
 	return response
 }
